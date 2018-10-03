@@ -91,6 +91,11 @@
       "type": "boolean",
       "default": false,
       "description": "When the signature panel switch places this setting will keep the panel aligned with the start of the function call, otherwise the panel will stick to the cursor position"
+    },
+    "signatureFollowCompletion": {
+      "type": "boolean",
+      "default": false,
+      "description": "When both the completion and signature panels are visible this setting make the signature follow change in position of the completion panel, preventing any overlap. When disabled both panel can endup stacked on top of each other depending on space availability."
     }
   },
   "providedServices": {
