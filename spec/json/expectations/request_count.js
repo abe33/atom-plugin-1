@@ -3,8 +3,14 @@
 const {waitsFor, waitsForPromise, loadPayload, substituteFromContext, buildContext, itForExpectation} = require('../utils');
 const KiteAPI = require('kite-api');
 
-const callsMatching = (exPath, exMethod, exPayload, context = {}) => {
-  const calls = KiteAPI.request.calls;
+const callsMatching = (data, exPath, exMethod, exPayload, context = {}) => {
+  const calls = data || KiteAPI.request.calls.map(c => {
+    return {
+      path: c.args[0].path,
+      method: c.args[0].method,
+      body: c.args[1],
+    };
+  });
 
   exPath = substituteFromContext(exPath, context);
   exPayload = exPayload && substituteFromContext(loadPayload(exPayload), context);
@@ -15,12 +21,12 @@ const callsMatching = (exPath, exMethod, exPayload, context = {}) => {
   if (!calls || calls.length === 0) { return []; }
 
   return calls.reverse().filter((c) => {
-    let [{path, method}, payload] = c.args;
+    let {path, method, body} = c;
     method = method || 'GET';
 
     // console.log(path, method, payload)
 
-    return path === exPath && method === exMethod && (!exPayload || expect.eql(JSON.parse(payload), exPayload));
+    return path === exPath && method === exMethod && (!exPayload || expect.eql(JSON.parse(body), exPayload));
   });
 };
 
@@ -49,14 +55,20 @@ const getDesc = expectation => () => {
 module.exports = (expectation, not) => {
   beforeEach(() => {
     const promise = waitsFor('calls matching request', () => {
-      calls = callsMatching(
-          expectation.properties.path,
-          expectation.properties.method,
-          expectation.properties.body,
-          buildContext());
+      return KiteAPI.requestJSON({path: '/testapi/request-history'})
+      .then((data) => {
+        calls = callsMatching(
+            data,
+            expectation.properties.path,
+            expectation.properties.method,
+            expectation.properties.body,
+            buildContext());
 
-      return calls.length === expectation.properties.count;
-    }, 300);
+        if (calls.length !== expectation.properties.count) {
+          throw new Error('fail');
+        }
+      });
+    }, 1500, 50);
 
     if (not) {
       waitsForPromise({label: getDesc(expectation), shouldReject: true}, () => promise);
