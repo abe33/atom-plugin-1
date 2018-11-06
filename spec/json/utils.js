@@ -6,6 +6,10 @@ const path = require('path');
 const base = path.resolve(__dirname, '..');
 const testBase = path.join(base, '..', 'node_modules', 'editors-json-tests');
 
+function inLiveEnvironment() {
+  return process.env.LIVE_ENVIRONMENT != undefined;
+}
+
 function jsonPath(...p) {
   return path.join(testBase, ...p);
 }
@@ -276,15 +280,16 @@ if (!NotificationsMock.initialized) {
 }
 
 module.exports = {
-  jsonPath,
-  walk,
-  loadPayload,
-  substituteFromContext,
   buildContext,
-  itForExpectation,
   describeForTest,
+  featureSetPath,
+  inLiveEnvironment,
+  itForExpectation,
+  jsonPath,
+  loadPayload,
+  NotificationsMock,
+  substituteFromContext,
   waitsFor,
   waitsForPromise,
-  NotificationsMock,
-  featureSetPath,
+  walk,
 };

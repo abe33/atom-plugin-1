@@ -6,9 +6,9 @@ const KiteConnect = require('kite-connector');
 
 const {withKite, withKitePaths, withKiteRoutes} = require('kite-api/test/helpers/kite');
 const {fakeResponse} = require('kite-connector/test/helpers/http');
-const {jsonPath, walk, describeForTest, featureSetPath, substituteFromContext, buildContext} = require('./json/utils');
+const {jsonPath, walk, describeForTest, featureSetPath, substituteFromContext, buildContext, inLiveEnvironment} = require('./json/utils');
 const NodeClient = require('kite-connector/lib/clients/node');
-const BrowserClient = require('kite-connector/lib/clients/browser');
+// const BrowserClient = require('kite-connector/lib/clients/browser');
 
 const ACTIONS = {};
 const EXPECTATIONS = {};
@@ -92,11 +92,13 @@ function buildTest(data, file) {
   describeForTest(data, `${data.description} ('${file}')`, () => {
     withKite(kiteSetup(data.setup.kited), () => {
       beforeEach(() => {
-        KiteConnect.client = new BrowserClient('localhost', '56624');
-        waitsForPromise(() => KiteConnect.request({
-          path: '/testapi/request-history/reset',
-          method: 'POST',
-        }));
+        if (inLiveEnvironment()) {
+          KiteConnect.client = new NodeClient('localhost', '56624');
+          waitsForPromise(() => KiteConnect.request({
+            path: '/testapi/request-history/reset',
+            method: 'POST',
+          }));
+        }
 
         runs(() => {
           spyOn(KiteAPI, 'request').andCallThrough();
@@ -124,31 +126,31 @@ function buildTest(data, file) {
           }
         }, () => {})();
       };
-      // if (/reachable|authenticated/.test(data.setup.kited)) {
-      //   withKitePaths(pathsSetup(data.setup), undefined, () => {
-      //     if (data.setup.routes) {
-      //       withKiteRoutes(data.setup.routes.map(r => {
-      //         const reg = new RegExp(substituteFromContext(r.match, buildContext()));
-      //
-      //         return [
-      //           o => reg.test(o.path),
-      //           o => {
-      //             if (r.response.body) {
-      //               const body = require(jsonPath(r.response.body));
-      //               return fakeResponse(r.response.status, JSON.stringify(body));
-      //             } else {
-      //               return fakeResponse(r.response.status);
-      //             }
-      //           },
-      //         ];
-      //
-      //       }));
-      //     }
-      //     block();
-      //   });
-      // } else {
-      block();
-      // }
+      if (!inLiveEnvironment() && /reachable|authenticated/.test(data.setup.kited)) {
+        withKitePaths(pathsSetup(data.setup), undefined, () => {
+          if (data.setup.routes) {
+            withKiteRoutes(data.setup.routes.map(r => {
+              const reg = new RegExp(substituteFromContext(r.match, buildContext()));
+
+              return [
+                o => reg.test(o.path),
+                o => {
+                  if (r.response.body) {
+                    const body = require(jsonPath(r.response.body));
+                    return fakeResponse(r.response.status, JSON.stringify(body));
+                  } else {
+                    return fakeResponse(r.response.status);
+                  }
+                },
+              ];
+
+            }));
+          }
+          block();
+        });
+      } else {
+        block();
+      }
     });
   });
 }

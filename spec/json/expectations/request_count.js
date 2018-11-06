@@ -1,7 +1,10 @@
 'use strict';
 
-const {waitsFor, waitsForPromise, loadPayload, substituteFromContext, buildContext, itForExpectation} = require('../utils');
 const KiteAPI = require('kite-api');
+const {
+  waitsFor, waitsForPromise, loadPayload, substituteFromContext,
+  buildContext, itForExpectation, inLiveEnvironment,
+} = require('../utils');
 
 const callsMatching = (data, exPath, exMethod, exPayload, context = {}) => {
   const calls = data || KiteAPI.request.calls.map(c => {
@@ -55,19 +58,30 @@ const getDesc = expectation => () => {
 module.exports = (expectation, not) => {
   beforeEach(() => {
     const promise = waitsFor('calls matching request', () => {
-      return KiteAPI.requestJSON({path: '/testapi/request-history'})
-      .then((data) => {
-        calls = callsMatching(
+      if (inLiveEnvironment()) {
+        return KiteAPI.requestJSON({path: '/testapi/request-history'})
+        .then((data) => {
+          calls = callsMatching(
             data,
             expectation.properties.path,
             expectation.properties.method,
             expectation.properties.body,
             buildContext());
 
-        if (calls.length !== expectation.properties.count) {
-          throw new Error('fail');
-        }
-      });
+          if (calls.length !== expectation.properties.count) {
+            throw new Error('fail');
+          }
+        });
+      } else {
+        calls = callsMatching(
+          null,
+          expectation.properties.path,
+          expectation.properties.method,
+          expectation.properties.body,
+          buildContext());
+
+        return calls.length === expectation.properties.count;
+      }
     }, 1500, 50);
 
     if (not) {

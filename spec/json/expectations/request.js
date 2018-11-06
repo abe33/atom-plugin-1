@@ -1,7 +1,10 @@
 'use strict';
 
 const KiteAPI = require('kite-api');
-const {waitsFor, waitsForPromise, loadPayload, substituteFromContext, buildContext, itForExpectation} = require('../utils');
+const {
+  waitsFor, waitsForPromise, loadPayload, substituteFromContext,
+  buildContext, itForExpectation, inLiveEnvironment,
+} = require('../utils');
 
 let closeMatches, exactMatch;
 const getDesc = (expectation, not) => () => {
@@ -101,18 +104,28 @@ const mostRecentCallMatching = (data, exPath, exMethod, exPayload, context = {},
 module.exports = (expectation, not) => {
   beforeEach(function() {
     const promise = waitsFor(() => {
-      return KiteAPI.requestJSON({path: '/testapi/request-history'})
-      .then((data) => {
-        if (!mostRecentCallMatching(
-              data,
-              expectation.properties.path,
-              expectation.properties.method,
-              expectation.properties.body,
-              buildContext(),
-              this.env)) {
-          throw new Error('fail');
-        }
-      });
+      if (inLiveEnvironment()) {
+        return KiteAPI.requestJSON({path: '/testapi/request-history'})
+        .then((data) => {
+          if (!mostRecentCallMatching(
+            data,
+            expectation.properties.path,
+            expectation.properties.method,
+            expectation.properties.body,
+            buildContext(),
+            this.env)) {
+            throw new Error('fail');
+          }
+        });
+      } else {
+        return mostRecentCallMatching(
+          null,
+          expectation.properties.path,
+          expectation.properties.method,
+          expectation.properties.body,
+          buildContext(),
+          this.env);
+      }
     }, 1500, 50);
 
     if (not) {
