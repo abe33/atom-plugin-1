@@ -94,7 +94,7 @@
     },
     "signatureFollowCompletion": {
       "type": "boolean",
-      "default": false,
+      "default": true,
       "description": "When both the completion and signature panels are visible this setting make the signature follow change in position of the completion panel, preventing any overlap. When disabled both panel can endup stacked on top of each other depending on space availability."
     }
   },
