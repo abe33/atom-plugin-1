@@ -87,11 +87,6 @@
       "title": "Developer mode",
       "description": "Enable Kite developer mode, displaying received data in the various UIs"
     },
-    "keepSignatureAligned": {
-      "type": "boolean",
-      "default": false,
-      "description": "When the signature panel switch places this setting will keep the panel aligned with the start of the function call, otherwise the panel will stick to the cursor position"
-    },
     "signatureFollowCompletion": {
       "type": "boolean",
       "default": true,
