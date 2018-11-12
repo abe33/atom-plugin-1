@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const {withKite, withKiteRoutes, withKitePaths} = require('kite-api/test/helpers/kite');
 const {fakeResponse} = require('kite-api/test/helpers/http');
+const completions = require('../lib/completions');
 
 const projectPath = path.join(__dirname, 'fixtures');
 let Kite;
@@ -42,6 +43,8 @@ describe('signature + completion', () => {
         waitsForPromise('package activation', () =>
           atom.packages.activatePackage('kite').then(pkg => {
             Kite = pkg.mainModule;
+
+            spyOn(completions, 'loadSignature').andCallThrough();
           }));
 
         waitsForPromise('open editor', () =>
@@ -69,6 +72,7 @@ describe('signature + completion', () => {
         beforeEach(() => {
           expect(completionList).not.toBeNull();
 
+          waitsFor('load signature call', () => completions.loadSignature.callCount > 0);
           waitsFor('first signature display', () => completionList.querySelector('kite-signature'));
 
           runs(() => {
