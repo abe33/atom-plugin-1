@@ -69,7 +69,7 @@ describe('signature + completion', () => {
         beforeEach(() => {
           expect(completionList).not.toBeNull();
 
-          waitsFor('signature', () => completionList.querySelector('kite-signature'));
+          waitsFor('first signature display', () => completionList.querySelector('kite-signature'));
 
           runs(() => {
             atom.commands.dispatch(editorView, 'autocomplete-plus:confirm');
@@ -80,7 +80,7 @@ describe('signature + completion', () => {
           const list = editorView.querySelector('autocomplete-suggestion-list');
           expect(list).not.toBeNull();
 
-          waitsFor('signature', () => list.querySelector('kite-signature'));
+          waitsFor('second signature display', () => list.querySelector('kite-signature'));
 
           waitsFor('empty list', () => list.querySelectorAll('li').length === 0);
         });
