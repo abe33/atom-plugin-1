@@ -45,6 +45,7 @@ describe('signature + completion', () => {
             Kite = pkg.mainModule;
 
             spyOn(completions, 'loadSignature').andCallThrough();
+            spyOn(completions, 'clearSignature').andCallThrough();
           }));
 
         waitsForPromise('open editor', () =>
@@ -73,6 +74,7 @@ describe('signature + completion', () => {
           expect(completionList).not.toBeNull();
 
           waitsFor('load signature call', () => completions.loadSignature.callCount > 0);
+          waitsFor('no clear sig call', () => completions.clearSignature.callCount === 0);
           waitsFor('first signature display', () => completionList.querySelector('kite-signature'));
 
           runs(() => {
