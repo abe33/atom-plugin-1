@@ -16,7 +16,7 @@ node_js:
 - "node"
 
 os:
-- osx
+- linux
 
 env:
   global:
